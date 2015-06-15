@@ -1,2 +1,12 @@
 # minecraft-pe-node
 A minecraft pocket edition standalone raspberry pi 2 server
+
+## HOST AP and DHCPD
+[create_ap](https://github.com/oblique/create_ap)
+
+## Bluetooth
+[evdev](http://python-evdev.readthedocs.org/en/latest/)
+
+sudo pacman -S core/linux-api-headers python2-pip
+sudo pip2 install evdev
+
