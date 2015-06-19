@@ -10,3 +10,6 @@ A minecraft pocket edition standalone raspberry pi 2 server
 sudo pacman -S core/linux-api-headers python2-pip
 sudo pip2 install evdev
 
+### Other libs
+* sudo pip2 install requests
+
