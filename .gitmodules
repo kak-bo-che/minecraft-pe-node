@@ -1,0 +1,3 @@
+[submodule "GameCoordinator/mcrcon"]
+	path = GameCoordinator/mcrcon
+	url = https://github.com/kak-bo-che/mcrcon.git

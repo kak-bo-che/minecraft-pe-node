@@ -1,6 +1,9 @@
 from KeyboardControl import KeyboardControl
+from RemoteConsole import RemoteConsole
 from transitions import Machine
+from Minecraft import Constants
 import requests
+import random
 import sched, time
 import json
 
@@ -9,15 +12,21 @@ class GameController(object):
   url = "http://localhost:8080/"
   states = ['stopped', 'forward', 'back']
 
-  def __init__(self):
-    self.weapons = self.get_weapons()
-    self.current_weapon = 0
+  def __init__(self, password):
+    self.setupPocketmineConnection(password)
+    self.setupStateMachine()
+    self.setupKeyboardControl()
+    self.current_item = 0
     self.direction = 0
-    self.machine = Machine(model=self, states=GameController.states, initial='stopped')
-    self.machine.add_transition('stop', '*', 'stopped', before='stop_direction')
-    self.machine.add_transition('play', 'stopped', 'forward', before= 'forward_direction')
-    self.machine.add_transition('reverse', 'stopped', 'back', before= 'reverse_direction')
-    self.keboard_control = KeyboardControl()
+    self.setupStateMachine()
+
+  def setupPocketmineConnection(self, password):
+    self.pocketmine_password = password
+    self.pocketmine = RemoteConsole(password)
+    self.users = self.pocketmine.getUsers()
+    self.items = self.get_items()
+
+  def setupKeyboardControl(self):
     self.events = {
       "KEY_ENTER":self.stop,
       "KEY_LEFT":self.reverse,
@@ -25,9 +34,27 @@ class GameController(object):
       "KEY_UP": self.play,
       "KEY_DOWN": self.reverse
     }
+    self.keboard_control = KeyboardControl(self.direction_control)
+
+  def setupStateMachine(self):
+    self.machine = Machine(model=self, states=GameController.states, initial='stopped', ignore_invalid_triggers=True)
+    self.machine.add_transition('stop', '*', 'stopped', before='stop_direction')
+    self.machine.add_transition('play', 'stopped', 'forward', before= 'forward_direction')
+    self.machine.add_transition('reverse', 'stopped', 'back', before= 'reverse_direction')
+
+  def direction_control(self, key):
+    self.debug(key)
+    self.events[key]()
+
+  def debug(self, key):
+    print "Key received: %s" % key
 
   def stop_direction(self):
     self.direction=0
+    if self.users:
+      user = self.users[random.randrange(len(self.users))]
+      item = self.items[self.current_item]
+      self.pocketmine.giveItem(user, item)
 
   def forward_direction(self):
     self.direction = 1
@@ -39,36 +66,37 @@ class GameController(object):
     if self.direction == 0:
       pass
     elif self.direction == 1:
-      if self.current_weapon == len(self.weapons) - 1:
-        self.current_weapon = 0
+      if self.current_item == len(self.items) - 1:
+        self.current_item = 0
       else:
-        self.current_weapon = self.current_weapon + 1
+        self.current_item = self.current_item + 1
     else:
-      if self.current_weapon == 0:
-        self.current_weapon = len(self.weapons) - 1
+      if self.current_item == 0:
+        self.current_item = len(self.items) - 1
       else:
-        self.current_weapon = self.current_weapon - 1
-    self.show_weapon(self.weapons[self.current_weapon])
+        self.current_item = self.current_item - 1
+    self.show_item(self.items[self.current_item])
 
   def run(self):
     while(True):
-      key = self.keboard_control.read_keys()
-      if key:
-        self.events[key]()
-      time.sleep(1)
+      self.keboard_control.read_keys()
       self.display()
+      time.sleep(0.25)
 
-  def get_weapons(self):
-    req = requests.get(self.url + 'blocks')
-    return req.json()['blocks']
+  def get_items(self):
+    req = requests.get(self.url + 'items')
+    return req.json()['items']
 
-  def show_weapon(self, weapon):
-    payload = {"block":weapon}
-    r = requests.post(self.url + "block", data=json.dumps(payload), headers=self.headers)
-    print r
+  def show_item(self, item):
+    payload = {"item":item}
+    if self.direction:
+      r = requests.post(self.url + "item", data=json.dumps(payload), headers=self.headers)
+      print r
 
 def main():
-  game_controller = GameController()
+  password="hTbVnCj50G"
+  game_controller = GameController(password)
   game_controller.run()
 
-main()
+if __name__ == '__main__':
+  main()
