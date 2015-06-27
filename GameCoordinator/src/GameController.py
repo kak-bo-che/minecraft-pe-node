@@ -1,101 +1,137 @@
 from KeyboardControl import KeyboardControl
 from RemoteConsole import RemoteConsole
+from ScreenControl import ScreenControl
 from transitions import Machine
 from Minecraft import Constants
-import requests
-import random
+from random import randrange
 import sched, time
 import json
 
 class GameController(object):
-  headers = {'content-type': 'application/json'}
-  url = "http://localhost:8080/"
-  states = ['stopped', 'forward', 'back']
 
-  def __init__(self, password):
+  def __init__(self, password, uri):
     self.setupPocketmineConnection(password)
     self.setupStateMachine()
     self.setupKeyboardControl()
+
+    self.display = ScreenControl(uri)
+    self.items = self.display.get_items()
+
     self.current_item = 0
     self.direction = 0
-    self.setupStateMachine()
+    self.timeout_event = None
+    self.scheduler = sched.scheduler(time.time, time.sleep)
 
   def setupPocketmineConnection(self, password):
     self.pocketmine_password = password
     self.pocketmine = RemoteConsole(password)
-    self.users = self.pocketmine.getUsers()
-    self.items = self.get_items()
 
   def setupKeyboardControl(self):
     self.events = {
-      "KEY_ENTER":self.stop,
-      "KEY_LEFT":self.reverse,
-      "KEY_RIGHT": self.play,
-      "KEY_UP": self.play,
-      "KEY_DOWN": self.reverse
+      "KEY_ENTER":self.key_enter,
+      "KEY_LEFT":self.key_left,
+      "KEY_RIGHT": self.key_right,
+      "KEY_UP": self.key_up,
+      "KEY_DOWN": self.key_down
     }
     self.keboard_control = KeyboardControl(self.direction_control)
 
   def setupStateMachine(self):
-    self.machine = Machine(model=self, states=GameController.states, initial='stopped', ignore_invalid_triggers=True)
-    self.machine.add_transition('stop', '*', 'stopped', before='stop_direction')
-    self.machine.add_transition('play', 'stopped', 'forward', before= 'forward_direction')
-    self.machine.add_transition('reverse', 'stopped', 'back', before= 'reverse_direction')
+    self.states = [
+    'start', 'stopped',
+    'random_get', 'random_teleport', 'random_steal', 'random_build',
+    'send_current_item', 'transport_to_player', 'take_from_player', 'build_current_building']
+
+    self.transitions = [
+        { 'trigger': 'key_enter', 'source': 'stopped', 'dest': 'start', 'after': 'waitForButtonPress'},
+        { 'trigger': 'key_up',    'source': 'start', 'dest': 'random_get', 'after': 'waitForButtonPress' },
+        { 'trigger': 'key_down',  'source': 'start', 'dest': 'random_teleport', 'after': 'waitForButtonPress' },
+        { 'trigger': 'key_right', 'source': 'start', 'dest': 'random_steal', 'after': 'waitForButtonPress' },
+        { 'trigger': 'key_left',  'source': 'start', 'dest': 'random_build', 'after': 'waitForButtonPress' },
+
+        { 'trigger': 'key_enter', 'source': 'random_get',      'dest': 'send_current_item', 'after': 'scheduleStop' },
+        { 'trigger': 'key_enter', 'source': 'random_teleport', 'dest': 'transport_to_player', 'after': 'scheduleStop' },
+        { 'trigger': 'key_enter', 'source': 'random_steal',    'dest': 'take_from_player', 'after': 'scheduleStop' },
+        { 'trigger': 'key_enter', 'source': 'random_build',    'dest': 'build_current_building', 'after': 'scheduleStop' },
+        { 'trigger': 'go_idle', 'source': '*', 'dest': 'stopped', 'after': 'clearDisplay'}
+    ]
+    self.machine = Machine(model=self, states=self.states, transitions=self.transitions, initial='stopped', ignore_invalid_triggers=True)
 
   def direction_control(self, key):
     self.debug(key)
     self.events[key]()
 
+  def scheduleStop(self):
+    self.scheduler.enter(5, 1, self.go_idle, ())
+
   def debug(self, key):
     print "Key received: %s" % key
 
+  def printState(self):
+    print self.state
+
   def stop_direction(self):
-    self.direction=0
     if self.users:
-      user = self.users[random.randrange(len(self.users))]
+      user = self.users[randrange(len(self.users))]
       item = self.items[self.current_item]
       self.pocketmine.giveItem(user, item)
 
-  def forward_direction(self):
-    self.direction = 1
+  def displayItem(self):
+    if self.state == 'random_get':
+      self.current_item = self.items[randrange(len(self.items))]
+      self.display.show_item(self.current_item)
 
-  def reverse_direction(self):
-    self.direction = -1
+  def clearDisplay(self):
+    self.display.power_off()
 
-  def display(self):
-    if self.direction == 0:
-      pass
-    elif self.direction == 1:
-      if self.current_item == len(self.items) - 1:
-        self.current_item = 0
-      else:
-        self.current_item = self.current_item + 1
+  def timeout(self):
+    print "Timeout"
+    self.timeout_event = None
+    self.go_idle()
+
+  def checkButtonState(self, current_state):
+    self.printState()
+    self.keboard_control.read_keys()
+    self.displayItem()
+
+    if self.state == current_state:
+      self.scheduler.enter(0.25, 1, self.checkButtonState, (current_state,))
     else:
-      if self.current_item == 0:
-        self.current_item = len(self.items) - 1
-      else:
-        self.current_item = self.current_item - 1
-    self.show_item(self.items[self.current_item])
+      self.clearTimeoutEvent()
+
+  def clearTimeoutEvent(self):
+    if self.timeout_event:
+      self.scheduler.cancel(self.timeout_event)
+      self.timeout_event = None
+
+  def waitForButtonPress(self):
+    self.clearTimeoutEvent()
+    current_state = self.state
+    # Timeout for button press
+    self.timeout_event = self.scheduler.enter(5, 1, self.timeout, ())
+    self.checkButtonState(current_state)
+    self.scheduler.run()
+
+  # def luckyUser(self):
+  #   users = self.pocketmine.getUsers()
+  #   if users:
+  #     self.user = users[randrange(len(users))]
+
+
 
   def run(self):
     while(True):
-      self.keboard_control.read_keys()
-      self.display()
-      time.sleep(0.25)
-
-  def get_items(self):
-    req = requests.get(self.url + 'items')
-    return req.json()['items']
-
-  def show_item(self, item):
-    payload = {"item":item}
-    if self.direction:
-      r = requests.post(self.url + "item", data=json.dumps(payload), headers=self.headers)
-      print r
+      self.key_enter()
+      sleepTime = randrange(120)
+      print "Sleeping for: %d seconds" %sleepTime
+      time.sleep(sleepTime)
+      # self.scheduler.enter(randrange(120), 1, self.luckyUser, ())
+      # self.scheduler.run()
 
 def main():
   password="hTbVnCj50G"
-  game_controller = GameController(password)
+  uri="http://localhost:8080/"
+  game_controller = GameController(password, uri)
   game_controller.run()
 
 if __name__ == '__main__':

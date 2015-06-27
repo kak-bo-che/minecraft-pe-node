@@ -12,7 +12,7 @@ class RemoteConsole(object):
     self.default_command = [self.cmd, "-c", "-p", self.password, "-H", self.host, "-P", str(self.port)]
     self.users = []
 
-  def getUsers(self):
+  def getPlayers(self):
     # ./mcrcon -p hTbVnCj50G -H 127.0.0.1 -P 19132 'list'
     parameters = ['list']
     output = self._executeCommand(parameters)
@@ -49,7 +49,7 @@ class RemoteConsole(object):
 
 def main():
   remoteConsole = RemoteConsole(host="127.0.0.1", port=19132, password="hTbVnCj50G")
-  users =  remoteConsole.getUsers()
+  users =  remoteConsole.getPlayers()
   if users:
     remoteConsole.giveItem(users[0], 'Gunpowder')
 
