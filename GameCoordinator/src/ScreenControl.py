@@ -10,6 +10,10 @@ class ScreenControl(object):
     payload = {"item":item}
     r = requests.post(self.uri + "item", data=json.dumps(payload), headers=self.headers)
 
+  def show_player(self, player):
+    payload = {"player":player}
+    r = requests.post(self.uri + "player", data=json.dumps(payload), headers=self.headers)
+
   def get_items(self):
     req = requests.get(self.uri + 'items')
     return req.json()['items']

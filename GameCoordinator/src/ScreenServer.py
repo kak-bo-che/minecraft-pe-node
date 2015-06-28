@@ -1,8 +1,10 @@
 
 from bottle import route, run, template, request, abort, Bottle
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from rpi_rgb_led_matrix.rgbmatrix import Adafruit_RGBmatrix
+from bibliopixel.drivers.driver_base import *
 from os import listdir
+import os
 from Minecraft import Constants
 from os.path import isfile, join
 import glob
@@ -26,6 +28,7 @@ class ScreenServer(Bottle):
     self.route('/items', method='GET', callback=self.get_items)
     self.route('/item', method='POST', callback=self.set_item)
     self.route('/item_id', method='POST', callback=self.set_item_id)
+    self.route('/player', method='POST', callback=self.set_player)
 
   def load_item_id(self, id):
     x = (id%16)*32
@@ -52,8 +55,16 @@ class ScreenServer(Bottle):
     if id < 256:
       self.load_item_id(id)
 
-  #     else:
-  #          abort(400, "Sorry, unknown block type: %s" % block)
+  def set_player(self):
+    self.matrix.Clear()
+    player_name = request.json.get('player')
+    if player_name:
+      image_path = join(os.path.dirname(os.path.abspath(__file__)), '4x6.pil')
+      font = ImageFont.load(image_path)
+      image = Image.new("1", (32, 32))
+      draw  = ImageDraw.Draw(image)
+      draw.text((0,13), player_name, font=font, fill='red')
+      self.matrix.SetImage(image.im.id, 0, 0)
 
 if __name__ == '__main__':
   server = ScreenServer()

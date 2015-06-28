@@ -20,6 +20,7 @@ class GameController(object):
     self.current_item = 0
     self.direction = 0
     self.timeout_event = None
+    self.target_player = None
     self.scheduler = sched.scheduler(time.time, time.sleep)
 
   def setupPocketmineConnection(self, password):
@@ -49,13 +50,19 @@ class GameController(object):
         { 'trigger': 'key_right', 'source': 'start', 'dest': 'random_steal', 'after': 'waitForButtonPress' },
         { 'trigger': 'key_left',  'source': 'start', 'dest': 'random_build', 'after': 'waitForButtonPress' },
 
-        { 'trigger': 'key_enter', 'source': 'random_get',      'dest': 'send_current_item', 'after': 'scheduleStop' },
-        { 'trigger': 'key_enter', 'source': 'random_teleport', 'dest': 'transport_to_player', 'after': 'scheduleStop' },
+        { 'trigger': 'key_enter', 'source': 'random_get',      'dest': 'send_current_item', 'before': 'sendItem','after': 'scheduleStop' },
+        { 'trigger': 'key_enter', 'source': 'random_teleport', 'dest': 'transport_to_player', 'before': 'teleportPlayer', 'after': 'scheduleStop' },
         { 'trigger': 'key_enter', 'source': 'random_steal',    'dest': 'take_from_player', 'after': 'scheduleStop' },
         { 'trigger': 'key_enter', 'source': 'random_build',    'dest': 'build_current_building', 'after': 'scheduleStop' },
         { 'trigger': 'go_idle', 'source': '*', 'dest': 'stopped', 'after': 'clearDisplay'}
     ]
     self.machine = Machine(model=self, states=self.states, transitions=self.transitions, initial='stopped', ignore_invalid_triggers=True)
+
+  def sendItem(self):
+    self.pocketmine.giveItem(self.player, self.current_item)
+
+  def teleportPlayer(self):
+    self.pocketmine.teleport(self.player, self.target_player)
 
   def direction_control(self, key):
     self.debug(key)
@@ -70,16 +77,21 @@ class GameController(object):
   def printState(self):
     print self.state
 
-  def stop_direction(self):
-    if self.users:
-      user = self.users[randrange(len(self.users))]
-      item = self.items[self.current_item]
-      self.pocketmine.giveItem(user, item)
+  # def stop_direction(self):
+  #   if self.users:
+  #     user = self.users[randrange(len(self.users))]
+  #     item = self.items[self.current_item]
+  #     self.pocketmine.giveItem(user, item)
 
   def displayItem(self):
     if self.state == 'random_get':
       self.current_item = self.items[randrange(len(self.items))]
       self.display.show_item(self.current_item)
+    if self.state == 'random_teleport':
+      players = self.pocketmine.getPlayers()
+      self.target_player = players[randrange(len(players))]
+      self.display.show_player(self.target_player)
+
 
   def clearDisplay(self):
     self.display.power_off()
@@ -112,21 +124,23 @@ class GameController(object):
     self.checkButtonState(current_state)
     self.scheduler.run()
 
-  # def luckyUser(self):
-  #   users = self.pocketmine.getUsers()
-  #   if users:
-  #     self.user = users[randrange(len(users))]
-
-
-
-  def run(self):
-    while(True):
+  def luckyUser(self):
+    players = self.pocketmine.getPlayers()
+    if players:
+      self.player = players[randrange(len(players))]
+      self.pocketmine.tellPlayer(self.player, "Time to Choose!")
       self.key_enter()
       sleepTime = randrange(120)
       print "Sleeping for: %d seconds" %sleepTime
       time.sleep(sleepTime)
-      # self.scheduler.enter(randrange(120), 1, self.luckyUser, ())
-      # self.scheduler.run()
+    else:
+      print "Waiting for Players to connect"
+      time.sleep(5)
+
+
+  def run(self):
+    while(True):
+      self.luckyUser()
 
 def main():
   password="hTbVnCj50G"

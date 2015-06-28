@@ -14,6 +14,7 @@ class RemoteConsole(object):
 
   def getPlayers(self):
     # ./mcrcon -p hTbVnCj50G -H 127.0.0.1 -P 19132 'list'
+    self.users = []
     parameters = ['list']
     output = self._executeCommand(parameters)
     raw_users = output.split(':')[1].strip()
@@ -32,7 +33,8 @@ class RemoteConsole(object):
     self._executeCommand(parameters)
 
   def tellPlayer(self, player, message):
-    parameters = ['tell', message]
+    print "tell %s: %s" %(player, message)
+    parameters = ['tell', player, message]
     self._executeCommand(parameters)
 
   def _executeCommand(self, parameters):
