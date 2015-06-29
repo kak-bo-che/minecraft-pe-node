@@ -29,7 +29,7 @@ module SideSlots(){
 	translate([0, -(	panel_diameter/2 + x_y_frame_offset)]) rotate(180) SideSlot();
 }
 module SidePanel(){
-	inside_box_height=70;
+	inside_box_height=66;
 	offset_to_outside_slot_center = panel_diameter/2 + x_y_frame_offset - 1.5*frame_hole_diameter;
 	square([2*(offset_to_outside_slot_center)+mounting_slot_length, inside_box_height], center=true);
 	translate([0, (inside_box_height+panel_width)/2]) SideSlot();
@@ -46,6 +46,7 @@ module CornerPanelBracket(){
 		translate([frame_hole_diameter + frame_hole_diameter/2, 0]) MountingSlot();
 		translate([0, frame_hole_diameter + frame_hole_diameter/2])  rotate(a=-90) MountingSlot();
 		circle(d=mounting_hole_diameter);
+		circle(d=5.45, $fn=6);
 	}
 }
 
