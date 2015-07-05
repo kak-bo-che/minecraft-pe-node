@@ -1,10 +1,11 @@
+from __future__ import print_function
 import re
 import os
 import json
 import logging
 from asyncore import file_dispatcher, loop
 from traceback import print_exc
-from evdev import InputDevice, list_devices, categorize, ecodes
+from evdev import InputDevice, list_devices, categorize, ecodes, events
 
 class ButtonDispatcher(file_dispatcher):
   def __init__(self, device, ButtonPressMethod, connectionLostMethod):
@@ -16,12 +17,36 @@ class ButtonDispatcher(file_dispatcher):
   def recv(self, ign=None):
     return self.device.read()
 
+  def translate_dpad(self, cat_event):
+    if 'ABS_HAT0X' == events.ABS[cat_event.event.code]:
+      if cat_event.event.value > 0:
+        button = 'KEY_RIGHT'
+      else:
+        button = 'KEY_LEFT'
+    else:
+      if cat_event.event.value > 0:
+        button = 'KEY_DOWN'
+      else:
+        button = 'KEY_UP'
+    return button
+
+
   def handle_read(self):
     for event in self.recv():
-      if event and event.type == ecodes.EV_KEY:
-        cat_event = categorize(event)
-        if cat_event.keystate == 1:
-          self.ButtonPressMethod(cat_event.keycode)
+      cat_event = categorize(event)
+
+      if (event.type == ecodes.EV_ABS and
+          re.match('ABS_HAT', str(events.ABS[cat_event.event.code])) and
+          cat_event.event.value != 0):
+        self.ButtonPressMethod(self.translate_dpad(cat_event))
+
+      if event.type == ecodes.EV_KEY:
+        if cat_event.keystate == events.KeyEvent.key_down:
+          if isinstance(cat_event.keycode,(list)):
+            btn_name = next(btn for btn in cat_event.keycode if re.match('BTN_.$', btn))
+            self.ButtonPressMethod(btn_name)
+          else:
+            self.ButtonPressMethod(cat_event.keycode)
         else:
           pass
 
@@ -41,7 +66,7 @@ class KeyboardControl(object):
     self.connectToEzKey()
 
   def connectToEzKey(self):
-    print "connecting keyboard"
+    print("connecting keyboard")
     logging.info("Looking for BT devices")
     self.device = self.findEzKey()
     if self.device:
@@ -56,8 +81,8 @@ class KeyboardControl(object):
     device = None
     devices = [InputDevice(fn) for fn in list_devices()]
     for dev in devices:
-      if re.match('Adafruit EZ-Key', dev.name):
-        print dev.fn
+      if re.match('Adafruit EZ-Key|Zeemote: SteelSeries FREE', dev.name):
+        print(dev.fn)
         device = dev.fn
         break
     return device
@@ -67,3 +92,12 @@ class KeyboardControl(object):
       loop(timeout=1, count=1)
     else:
       self.connectToEzKey()
+
+def main():
+  debug = lambda k: print(k)
+  keyboard = KeyboardControl(debug)
+  while(True):
+    keyboard.read_keys()
+
+if __name__ == '__main__':
+  main()

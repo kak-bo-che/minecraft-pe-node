@@ -28,13 +28,14 @@ class GameController(object):
     self.pocketmine = RemoteConsole(password)
 
   def setupKeyboardControl(self):
-    self.events = {
-      "KEY_ENTER":self.key_enter,
-      "KEY_LEFT":self.key_left,
-      "KEY_RIGHT": self.key_right,
-      "KEY_UP": self.key_up,
-      "KEY_DOWN": self.key_down
-    }
+    self.events = {}
+    self.events["KEY_ENTER"] = self.key_enter
+    self.events["BTN_START"] = self.key_enter
+    self.events["KEY_LEFT"] = self.key_left
+    self.events["KEY_RIGHT"] = self.key_right
+    self.events["KEY_UP"] = self.key_up
+    self.events["KEY_DOWN"] = self.key_down
+
     self.keboard_control = KeyboardControl(self.direction_control)
 
   def setupStateMachine(self):
@@ -65,23 +66,25 @@ class GameController(object):
     self.pocketmine.teleport(self.player, self.target_player)
 
   def direction_control(self, key):
-    self.debug(key)
-    self.events[key]()
+    if isinstance(key,(list)):
+      key = key[0]
+    if key in self.events:
+      self.debug(key)
+      self.events[key]()
+    else:
+      self.missingKey(key)
 
   def scheduleStop(self):
     self.scheduler.enter(5, 1, self.go_idle, ())
+
+  def missingKey(self, key):
+    print "Unassigned Button: %s" % key
 
   def debug(self, key):
     print "Key received: %s" % key
 
   def printState(self):
     print self.state
-
-  # def stop_direction(self):
-  #   if self.users:
-  #     user = self.users[randrange(len(self.users))]
-  #     item = self.items[self.current_item]
-  #     self.pocketmine.giveItem(user, item)
 
   def displayItem(self):
     if self.state == 'random_get':
