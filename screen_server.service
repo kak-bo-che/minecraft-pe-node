@@ -1,0 +1,14 @@
+[Unit]
+Description=Minecraft Matrix Service
+After=network.target
+
+[Service]
+Type=simple
+Environment=PYTHONPATH=/opt/GameCoordinator
+ExecStart=/usr/bin/python2 /opt/GameCoordinator/src/ScreenServer.py
+KillSignal=SIGINT
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
