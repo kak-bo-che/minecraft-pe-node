@@ -4,6 +4,10 @@ A minecraft pocket edition standalone raspberry pi 2 server
 ## HOST AP and DHCPD
 [create_ap](https://github.com/oblique/create_ap)
 
+### Setup IP
+systemctl enable create_ap
+
+
 ## Bluetooth
 [evdev](http://python-evdev.readthedocs.org/en/latest/)
 

@@ -18,7 +18,7 @@ module SideSlotsHalf(){
 	translate([1.5*center_offset,0,0]) MountingSlot();
 }
 module SideSlot(){
-	SideSlotsHalf(); 
+	SideSlotsHalf();
 	mirror([1,0,0]) SideSlotsHalf();
 }
 
@@ -28,6 +28,7 @@ module SideSlots(){
 	translate([0, panel_diameter/2 + x_y_frame_offset]) SideSlot();
 	translate([0, -(	panel_diameter/2 + x_y_frame_offset)]) rotate(180) SideSlot();
 }
+
 module SidePanel(){
 	inside_box_height=66;
 	offset_to_outside_slot_center = panel_diameter/2 + x_y_frame_offset - 1.5*frame_hole_diameter;
@@ -35,13 +36,14 @@ module SidePanel(){
 	translate([0, (inside_box_height+panel_width)/2]) SideSlot();
 	translate([0, -(inside_box_height+panel_width)/2]) SideSlot();
 }
+
 module CornerPanelBracket(){
 	difference(){
-        hull(){
-        		translate([frame_hole_diameter, 0]) circle(d=frame_hole_diameter);
-			translate([0, frame_hole_diameter]) circle(d=frame_hole_diameter);
-			circle(d=frame_hole_diameter);
-		}
+      hull(){
+      	translate([frame_hole_diameter, 0]) circle(d=frame_hole_diameter);
+				translate([0, frame_hole_diameter]) circle(d=frame_hole_diameter);
+				circle(d=frame_hole_diameter);
+			}
 		//translate([frame_hole_diameter + frame_hole_diameter/2, 0])
 		translate([frame_hole_diameter + frame_hole_diameter/2, 0]) MountingSlot();
 		translate([0, frame_hole_diameter + frame_hole_diameter/2])  rotate(a=-90) MountingSlot();
@@ -50,12 +52,22 @@ module CornerPanelBracket(){
 	}
 }
 
+module CornerSpacer(){
+		difference(){
+			circle(d=frame_hole_diameter);
+		//translate([frame_hole_diameter + frame_hole_diameter/2, 0])
+			circle(d=mounting_hole_diameter);
+		}
+}
+
+
 module CornerPanelBrackets(){
 	translate([panel_diameter/2 + x_y_frame_offset, panel_diameter/2 + x_y_frame_offset]) rotate(180) CornerPanelBracket();
 	translate([panel_diameter/2 + x_y_frame_offset, -panel_diameter/2 - x_y_frame_offset]) rotate(90) CornerPanelBracket();
 	translate([-panel_diameter/2 - x_y_frame_offset, -panel_diameter/2 - x_y_frame_offset]) CornerPanelBracket();
 	translate([-panel_diameter/2 - x_y_frame_offset, panel_diameter/2 + x_y_frame_offset]) rotate(-90) CornerPanelBracket();
 }
+
 module CoverPanelHoles(hole_diameter){
 	translate([panel_diameter/2 + x_y_frame_offset, panel_diameter/2 + x_y_frame_offset]) circle(d=hole_diameter);
 	translate([panel_diameter/2 + x_y_frame_offset, -panel_diameter/2 - x_y_frame_offset]) circle(d=hole_diameter);
@@ -63,8 +75,9 @@ module CoverPanelHoles(hole_diameter){
 	translate([-panel_diameter/2 - x_y_frame_offset, -panel_diameter/2 - x_y_frame_offset]) circle(d=hole_diameter);
 	translate([-panel_diameter/2 - x_y_frame_offset, panel_diameter/2 + x_y_frame_offset]) circle(d=hole_diameter);
 }
+
 module LedPanel(){
-	square([panel_diameter, panel_diameter], center=true);
+	square(panel_diameter+ 2*x_y_frame_offset - panel_width, center=true);
 }
 
 module LedPanelHoles(){
@@ -78,8 +91,8 @@ module LedPanelHoles(){
 
 	// Odd holes
 	translate([vertical_hole/2, 0]) circle(d=mounting_hole_diameter);
-	translate([-vertical_hole/2, 0]) circle(d=mounting_hole_diameter);	
-	
+	translate([-vertical_hole/2, 0]) circle(d=mounting_hole_diameter);
+
 	// Nubs
 	translate([-(panel_diameter/2 - 8), panel_diameter/2 - 18]) circle(d=mounting_hole_diameter);
 	translate([(panel_diameter/2 - 8), -(panel_diameter/2 - 18)]) circle(d=mounting_hole_diameter);
@@ -93,7 +106,7 @@ module LedPanelConnectors(){
 	y_offset=45;
 	translate([x_offset, y_offset]) RibbonConnector();
 	translate([-x_offset, y_offset]) RibbonConnector();
-	
+
 	translate([22, -25]) square([20,15]);
 }
 
@@ -136,6 +149,7 @@ module MountingHoleTest(){
 	}
 }
 //SidePanel();
-CornerPanelBracket();
+//CornerPanelBracket();
+//CornerSpacer();
 //SideSlots();
 //MountingHoleTest();
