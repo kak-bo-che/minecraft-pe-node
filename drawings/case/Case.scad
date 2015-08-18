@@ -37,6 +37,19 @@ module SidePanel(){
 	translate([0, -(inside_box_height+panel_width)/2]) SideSlot();
 }
 
+module UsbSidePanel(){
+	inside_box_height=66;
+	derp = inside_box_height/2 - 18 - hole_height;
+	hole_width = 18;
+	hole_height = 15;
+	offset_to_outside_slot_center = panel_diameter/2 + x_y_frame_offset - 1.5*frame_hole_diameter;
+	distance_to_edge = (2*(offset_to_outside_slot_center)+mounting_slot_length)/2;
+	difference(){
+		SidePanel();
+		translate([distance_to_edge - hole_width -17, derp]) square([hole_width, hole_height]);
+	}
+}
+
 module CornerPanelBracket(){
 	difference(){
       hull(){
@@ -148,7 +161,7 @@ module MountingHoleTest(){
 		LedPanelConnectors();
 	}
 }
-//SidePanel();
+UsbSidePanel();
 //CornerPanelBracket();
 //CornerSpacer();
 //SideSlots();
