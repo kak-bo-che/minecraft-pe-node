@@ -34,7 +34,7 @@ module SidePanel(){
 	offset_to_outside_slot_center = panel_diameter/2 + x_y_frame_offset - 1.5*frame_hole_diameter;
 	square([2*(offset_to_outside_slot_center)+mounting_slot_length, inside_box_height], center=true);
 	translate([0, (inside_box_height+panel_width)/2]) SideSlot();
-	translate([0, -(inside_box_height+panel_width)/2]) SideSlot();
+	translate([0, -(inside_box_height+panel_width)/2 + 0.001]) SideSlot();
 }
 
 module sub_mini_slide_switch(center=false){
