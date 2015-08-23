@@ -37,16 +37,44 @@ module SidePanel(){
 	translate([0, -(inside_box_height+panel_width)/2]) SideSlot();
 }
 
+module sub_mini_slide_switch(center=false){
+	length=23.3;
+	width=7.5;
+	hole_separation=19;
+	hole_size=2.1;
+
+	difference(){
+		%square([23.3, 7.5]);
+		union(){
+			translate([(length - 9)/2, (width -4)/2]) square([9,4]);
+			translate([(length - hole_separation)/2, width/2]){
+				circle(d=hole_size);
+				translate([hole_separation, 0]) circle(d=hole_size);
+			}
+		}
+	}
+}
+
 module UsbSidePanel(){
+	usb_connector_width=10;
 	inside_box_height=66;
-	derp = inside_box_height/2 - 18 - hole_height;
+	//hole_width = usb_connector_width;
 	hole_width = 18;
-	hole_height = 15;
+	hole_height = 10;
+	hole_height_old = 15;
+	hole_y_offset_old = inside_box_height/2 - 18 - hole_height_old;
+	hole_y_offset = inside_box_height/2 - 21 - hole_height;
+
 	offset_to_outside_slot_center = panel_diameter/2 + x_y_frame_offset - 1.5*frame_hole_diameter;
 	distance_to_edge = (2*(offset_to_outside_slot_center)+mounting_slot_length)/2;
 	difference(){
 		SidePanel();
-		translate([distance_to_edge - hole_width -17, derp]) square([hole_width, hole_height]);
+		// 17 is ?
+		half_old_hole_width = (hole_width - usb_connector_width)/2;
+		%translate([distance_to_edge - hole_width -17, hole_y_offset_old]) square([18, hole_height_old]);
+		translate([distance_to_edge - hole_width -17 + half_old_hole_width, hole_y_offset]) square([usb_connector_width, hole_height]);
+		switch_length=23.3;
+		translate([distance_to_edge - hole_width + (hole_width - switch_length)/2  -17 , hole_y_offset -20]) sub_mini_slide_switch();
 	}
 }
 
