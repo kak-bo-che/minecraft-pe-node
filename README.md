@@ -17,3 +17,8 @@ sudo pip2 install evdev
 ### Other libs
 * sudo pip2 install requests
 
+Quelab Tablet
+quelab.tablet.01
+quelab.tablet.02
+quelab.tablet.03
+
