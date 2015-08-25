@@ -1,6 +1,6 @@
 $fn=20;
 vertical_hole=172.5;
-horizontal_hole=167.0;
+horizontal_hole=165.0;
 mounting_hole_diameter=3.2;
 frame_hole_diameter=20;
 panel_diameter=192;
