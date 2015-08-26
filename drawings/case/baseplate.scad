@@ -10,7 +10,7 @@ case_length=192 + 2*x_y_frame_offset + frame_hole_diameter;
 case_width=case_length;
 
 min_height=40;
-panel_thickness=3.1; //3.1, 1.55, 5.7 ?
+panel_thickness=2.9; //3.1, 1.55, 5.7 ?
 
 corner_pieces = floor(min_height/panel_thickness);
 case_height=corner_pieces*panel_thickness;
@@ -130,6 +130,15 @@ module BackFrame(){
 	}
 }
 
+module Back(){
+	difference(){
+		hull(){
+			CoverPanelHoles(frame_hole_diameter);
+		}
+		CoverPanelHoles(mounting_hole_diameter);
+	}
+}
+
 vertical_distance_to_holes=(vertical_hole/2 - anker_battery_width)/2;
 //	width=anker_battery_width+4*vertical_distance_to_holes;
 offset_to_battery = (case_width - vertical_hole)/2 + vertical_distance_to_holes;
@@ -195,27 +204,27 @@ module MountingHoleTest(){
 module battery_side(){
 	difference(){
 		translate([case_height, 0]) rotate(90) length_side();
-		translate([panel_thickness, offset_to_battery]) square([20, anker_battery_width]);
+		translate([panel_thickness, (battery_holder_base_width - anker_battery_width)/2 -corner_radius/3 ]) square([20, anker_battery_width]);
 		translate([case_height/2, case_length/2 + 10]) circle(d=7.8);
 	}
 }
 
-translate([case_length + 44, 1.5*corner_radius]) rotate(90) length_side(){
-		translate([(case_length - 3*corner_radius)/2 + raspberrypi_width +20, case_height - 6 ])  rotate(180) pi_side();
-}
-translate([case_length + 80, 1.5*corner_radius]) battery_side();
-base(){
-	translate([case_length/2, case_length/2]){
-			LedPanelHoles();
-			LedPanelConnectors();
-			//translate([11,20])
-			translate([case_length/2 - (raspberrypi_length + corner_radius + panel_thickness/2), 20]) RaspberryPi2();
-			%translate([-case_length/2 , -(anker_battery_width  +vertical_hole/2)/2]) anker_battery();
-		}
-}
+// translate([case_length + 44, 1.5*corner_radius]) rotate(90) length_side(){
+// 		translate([(case_length - 3*corner_radius)/2 + raspberrypi_width +20, case_height - 6 ])  rotate(180) pi_side();
+// }
+// translate([-50, 1.5*corner_radius]) battery_side();
+// base(){
+// 	translate([case_length/2, case_length/2]){
+// 			LedPanelHoles();
+// 			LedPanelConnectors();
+// 			//translate([11,20])
+// 			translate([case_length/2 - (raspberrypi_length + corner_radius + panel_thickness/2), 20]) RaspberryPi2();
+// 			%translate([-case_length/2 , -(anker_battery_width  +vertical_hole/2)/2]) anker_battery();
+// 		}
+// }
 translate([-140, 0]) battery_holder_base();
-translate([-200, 0]) battery_holder();
-translate([0, -50]) length_side();
-translate([0, -100]) length_side();
+//translate([-200, 0]) battery_holder();
+//translate([0, -50]) length_side();
+//translate([0, -100]) length_side();
 
 //translate([case_length/2 , case_length/2]) BackFrame();
