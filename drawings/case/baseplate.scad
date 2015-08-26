@@ -88,8 +88,8 @@ module pi_side(){
   usb_height=16;
   usb_width=16;
 
-  ethernet_width=16;
-  ethernet_height=12.5;
+  ethernet_width=16.3;
+  ethernet_height=14.3;
   first_usb_center=56-47;
   second_usb_center=56-29;
   ethernet_center=56-10.25;
@@ -209,9 +209,9 @@ module battery_side(){
 	}
 }
 
-// translate([case_length + 44, 1.5*corner_radius]) rotate(90) length_side(){
-// 		translate([(case_length - 3*corner_radius)/2 + raspberrypi_width +20, case_height - 6 ])  rotate(180) pi_side();
-// }
+translate([case_length + 44, 1.5*corner_radius]) rotate(90) length_side(){
+		translate([(case_length - 3*corner_radius)/2 + raspberrypi_width +20, case_height - 6 ])  rotate(180) pi_side();
+}
 // translate([-50, 1.5*corner_radius]) battery_side();
 // base(){
 // 	translate([case_length/2, case_length/2]){
