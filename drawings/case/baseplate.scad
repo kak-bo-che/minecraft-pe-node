@@ -10,7 +10,7 @@ case_length=192 + 2*x_y_frame_offset + frame_hole_diameter;
 case_width=case_length;
 
 min_height=40;
-panel_thickness=2.9; //3.1, 1.55, 5.7 ?
+panel_thickness=2.78; //3.1, 1.55, 5.7 ?
 
 corner_pieces = floor(min_height/panel_thickness);
 case_height=corner_pieces*panel_thickness;
