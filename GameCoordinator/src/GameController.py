@@ -149,6 +149,7 @@ class GameController(object):
       time.sleep(sleepTime)
     else:
       print "Waiting for Players to connect"
+      self.display.show_item(self.items[randrange(len(self.items))])
       time.sleep(5)
 
 
