@@ -41,20 +41,20 @@ class GameController(object):
   def setupStateMachine(self):
     self.states = [
     'start', 'stopped',
-    'random_get', 'random_teleport', 'random_steal', 'random_build',
-    'send_current_item', 'transport_to_player', 'take_from_player', 'build_current_building']
+    'random_get', 'random_teleport', 'random_steal', 'random_fire',
+    'send_current_item', 'transport_to_player', 'take_from_player', 'set_player_on_fire']
 
     self.transitions = [
         { 'trigger': 'key_enter', 'source': 'stopped', 'dest': 'start', 'after': 'waitForButtonPress'},
         { 'trigger': 'key_up',    'source': 'start', 'dest': 'random_get', 'after': 'waitForButtonPress' },
         { 'trigger': 'key_down',  'source': 'start', 'dest': 'random_teleport', 'after': 'waitForButtonPress' },
         { 'trigger': 'key_right', 'source': 'start', 'dest': 'random_steal', 'after': 'waitForButtonPress' },
-        { 'trigger': 'key_left',  'source': 'start', 'dest': 'random_build', 'after': 'waitForButtonPress' },
+        { 'trigger': 'key_left',  'source': 'start', 'dest': 'random_fire', 'after': 'waitForButtonPress' },
 
         { 'trigger': 'key_enter', 'source': 'random_get',      'dest': 'send_current_item', 'before': 'sendItem','after': 'scheduleStop' },
         { 'trigger': 'key_enter', 'source': 'random_teleport', 'dest': 'transport_to_player', 'before': 'teleportPlayer', 'after': 'scheduleStop' },
         { 'trigger': 'key_enter', 'source': 'random_steal',    'dest': 'take_from_player', 'after': 'scheduleStop' },
-        { 'trigger': 'key_enter', 'source': 'random_build',    'dest': 'build_current_building', 'after': 'scheduleStop' },
+        { 'trigger': 'key_enter', 'source': 'random_fire',    'dest': 'set_player_on_fire', 'before': 'burnPlayer', 'after': 'scheduleStop' },
         { 'trigger': 'go_idle', 'source': '*', 'dest': 'stopped', 'after': 'clearDisplay'}
     ]
     self.machine = Machine(model=self, states=self.states, transitions=self.transitions, initial='stopped', ignore_invalid_triggers=True)
@@ -64,6 +64,9 @@ class GameController(object):
 
   def teleportPlayer(self):
     self.pocketmine.teleport(self.player, self.target_player)
+
+  def burnPlayer(self):
+    self.pocketmine.burnPlayer(self.target_player)
 
   def direction_control(self, key):
     if isinstance(key,(list)):
@@ -90,7 +93,7 @@ class GameController(object):
     if self.state == 'random_get':
       self.current_item = self.items[randrange(len(self.items))]
       self.display.show_item(self.current_item)
-    if self.state == 'random_teleport':
+    if self.state == 'random_teleport' or self.state == 'random_fire':
       players = self.pocketmine.getPlayers()
       self.target_player = players[randrange(len(players))]
       self.display.show_player(self.target_player)
@@ -129,9 +132,14 @@ class GameController(object):
 
   def luckyUser(self):
     players = self.pocketmine.getPlayers()
+    message = ("Button Time!\n"
+               "Blue   - Get a random Item\n"
+               "Green  - Steal an item from another player\n"
+               "Yellow - Teleport to another player\n"
+               "White  - Set a player on fire\n")
     if players:
       self.player = players[randrange(len(players))]
-      self.pocketmine.tellPlayer(self.player, "Time to Choose!")
+      self.pocketmine.tellPlayer(self.player, message)
       self.key_enter()
       sleepTime = randrange(120)
       print "Sleeping for: %d seconds" %sleepTime
