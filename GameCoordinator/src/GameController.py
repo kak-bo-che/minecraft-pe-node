@@ -53,7 +53,7 @@ class GameController(object):
 
         { 'trigger': 'key_enter', 'source': 'random_get',      'dest': 'send_current_item', 'before': 'sendItem','after': 'scheduleStop' },
         { 'trigger': 'key_enter', 'source': 'random_teleport', 'dest': 'transport_to_player', 'before': 'teleportPlayer', 'after': 'scheduleStop' },
-        { 'trigger': 'key_enter', 'source': 'random_steal',    'dest': 'take_from_player', 'after': 'scheduleStop' },
+        { 'trigger': 'key_enter', 'source': 'random_steal',    'dest': 'take_from_player', 'before': 'stealItem', 'after': 'scheduleStop' },
         { 'trigger': 'key_enter', 'source': 'random_fire',    'dest': 'set_player_on_fire', 'before': 'burnPlayer', 'after': 'scheduleStop' },
         { 'trigger': 'go_idle', 'source': '*', 'dest': 'stopped', 'after': 'clearDisplay'}
     ]
@@ -67,6 +67,9 @@ class GameController(object):
 
   def burnPlayer(self):
     self.pocketmine.burnPlayer(self.target_player)
+
+  def stealItem(self):
+    self.pocketmine.stealItem(self.player, self.target_player)
 
   def direction_control(self, key):
     if isinstance(key,(list)):
@@ -93,7 +96,7 @@ class GameController(object):
     if self.state == 'random_get':
       self.current_item = self.items[randrange(len(self.items))]
       self.display.show_item(self.current_item)
-    if self.state == 'random_teleport' or self.state == 'random_fire':
+    if self.state in ['random_teleport', 'random_fire', 'random_steal']:
       players = self.pocketmine.getPlayers()
       self.target_player = players[randrange(len(players))]
       self.display.show_player(self.target_player)
@@ -141,7 +144,7 @@ class GameController(object):
       self.player = players[randrange(len(players))]
       self.pocketmine.tellPlayer(self.player, message)
       self.key_enter()
-      sleepTime = randrange(120)
+      sleepTime = randrange(90)
       print "Sleeping for: %d seconds" %sleepTime
       time.sleep(sleepTime)
     else:

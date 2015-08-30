@@ -37,9 +37,13 @@ class RemoteConsole(object):
     parameters = ['tell', player, message]
     self._executeCommand(parameters)
 
-  def burnPlayer(self, player, seconds=3):
+  def burnPlayer(self, player, seconds=4):
     parameters = ['adminfun', 'burn', player, str(seconds)]
     print parameters
+    self._executeCommand(parameters)
+
+  def stealItem(self, player1, player2):
+    parameters = ['steal_item', player1, player2]
     self._executeCommand(parameters)
 
   def _executeCommand(self, parameters):
